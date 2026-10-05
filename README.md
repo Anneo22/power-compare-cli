@@ -1,6 +1,4 @@
-<p align="left"><img src="docs/logo.svg" width="230" alt="Power Compare logo"></p>
-
-# Power Compare
+<h1><img src="docs/readme-header.svg" width="112" height="72" align="absmiddle" alt=""> <img src="docs/readme-title.svg" width="256" height="40" align="absmiddle" alt="Power Compare*"></h1>
 
 Compare cycling power recordings from FIT and CSV files, then choose the next test when the numbers disagree. Runs locally, with a command line for scripts and agents and a small browser interface.
 

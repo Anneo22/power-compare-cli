@@ -87,6 +87,6 @@ python -m unittest discover -s tests -v
 python scripts/check_examples.py
 ```
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE). Title lettering uses Literata under its [SIL Open Font Licence](docs/fonts/OFL-literata.txt).
 
 <p><a href="https://abcastor.com"><img src="docs/castor-footer.svg" width="350" alt="Chip, the Castor beaver, by Castor, we give a dam"></a></p>

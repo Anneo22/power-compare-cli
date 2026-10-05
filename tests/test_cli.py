@@ -3,6 +3,7 @@ import io
 import json
 import tempfile
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
 
@@ -79,7 +80,28 @@ class CliTests(unittest.TestCase):
         html = Path(str(prefix)+".html").read_text()
         self.assertIn("Power", html)
         self.assertIn("a.csv", html)
-        self.assertNotIn("https://", html)
+        class Resources(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.navigation = []
+                self.resources = []
+
+            def handle_starttag(self, tag, attrs):
+                values = dict(attrs)
+                if tag == "a" and "href" in values:
+                    self.navigation.append(values["href"])
+                if tag in {"img", "script", "iframe", "embed", "object", "audio", "video", "source", "track", "input", "image", "use"}:
+                    self.resources.extend(values.get(name, "") for name in ("src", "srcset", "data", "poster", "href", "xlink:href"))
+                if tag == "link":
+                    self.resources.append(values.get("href", ""))
+
+        parsed = Resources()
+        parsed.feed(html)
+        remote = lambda value: value.strip().lower().startswith(("http:", "https:", "//"))
+        self.assertEqual([url for url in parsed.navigation if remote(url)], ["https://abcastor.com"])
+        self.assertFalse(any(remote(url) for url in parsed.resources))
+        self.assertNotRegex(html, r"(?i)url\(\s*['\"]?(?:https?:|//)")
+        self.assertNotRegex(html, r"(?i)@import\s+(?:url\()?\s*['\"]?(?:https?:|//)")
 
 
 if __name__ == "__main__":

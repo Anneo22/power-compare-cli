@@ -1,3 +1,4 @@
+import base64
 import csv
 import io
 import re
@@ -10,7 +11,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from power_compare.core import compare_files
-from power_compare.web import STYLE, make_server, render_report
+from power_compare.web import STYLE, make_server, render_report, render_upload
 
 
 def recording(power=100, *, elapsed=False):
@@ -88,6 +89,8 @@ class WebTests(unittest.TestCase):
         self.assertEqual(response_headers["Cache-Control"], "no-store")
         self.assertEqual(response_headers["Referrer-Policy"], "same-origin")
         self.assertNotIn("Access-Control-Allow-Origin", response_headers)
+        self.assertIn("default-src 'none'", response_headers["Content-Security-Policy"])
+        self.assertIn("img-src data:;", response_headers["Content-Security-Policy"])
 
     def test_foreign_origin_host_and_csrf_rejected(self):
         body, headers = self.form()
@@ -166,6 +169,27 @@ class WebTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;", page)
         self.assertNotIn("<script>", page)
         self.assertIn('id="reference-file"', page)
+
+    def test_branding_is_embedded_in_workspace_and_standalone_report(self):
+        # Neither the report nor the workspace may load unpackaged docs assets.
+        with patch.object(Path, "read_bytes", side_effect=AssertionError("asset file read")):
+            with patch.object(Path, "read_text", side_effect=AssertionError("asset file read")):
+                pages = [render_upload("token", {}), render_report({})]
+        for page in pages:
+            with self.subTest(report="Standalone comparison report" in page):
+                assets = re.findall(r'<img[^>]+src="([^"]+)"', page)
+                self.assertEqual(len(assets), 3)
+                decoded = []
+                for asset in assets:
+                    self.assertTrue(asset.startswith("data:image/svg+xml;base64,"))
+                    decoded.append(base64.b64decode(asset.split(",", 1)[1], validate=True).decode())
+                self.assertIn("Power Compare product mark with Castor signature", decoded[0])
+                self.assertIn('id="castor-badge"', decoded[0])
+                self.assertIn("Power Compare*", decoded[1])
+                self.assertIn("By Castor, we give a dam", decoded[2])
+                self.assertIn("--sigink:#00858f", decoded[2])
+                self.assertIn('href="https://abcastor.com"', page)
+                self.assertNotRegex(page, r'<(?:img|script|link)[^>]+(?:src|href)="https?://')
 
     def test_palette_is_declared_on_a_valid_root_selector(self):
         # A stray leading combinator silently invalidates the palette rule.

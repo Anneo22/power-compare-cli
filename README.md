@@ -89,4 +89,4 @@ python scripts/check_examples.py
 
 Project code uses Apache License 2.0. See [LICENSE](LICENSE). Dependencies retain their own licences. Title lettering uses Literata under its [SIL Open Font Licence](docs/fonts/OFL-literata.txt).
 
-<p><a href="https://abcastor.com"><img src="docs/castor-footer.svg" width="350" alt="Chip, the Castor beaver, by Castor, we give a dam"></a></p>
+<p><a href="https://abcastor.com"><img src="docs/castor-footer.svg" width="350" alt="Chip, the Castor beaver, Castor, we give a dam"></a></p>
